@@ -3,11 +3,11 @@ from launch_ros.actions import Node
 
 def generate_launch_description():
     return LaunchDescription([
-        Node(
-            package='pynqcar_pubsub',
-            executable='Driver',
-            name='Driver'
-        ),
+        #Node(
+        #    package='pynqcar_pubsub',
+        #    executable='Driver',
+        #    name='Driver'
+        #),
         Node(
             package='pynqcar_pubsub',
             executable='listen',
