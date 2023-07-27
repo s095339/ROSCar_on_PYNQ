@@ -17,6 +17,16 @@ from rclpy.node import Node
 import threading
 
 from std_msgs.msg import String
+
+# add python path
+import os
+import sys
+from pathlib import Path
+workspace = Path(__file__).parents[3] # 3-level up from __file__
+sys.path.append('/usr/local/share/pynq-venv/lib/python3.10/site-packages')
+sys.path.append(os.path.join(workspace, 'include'))
+sys.path.append(os.path.join(workspace, 'hardware'))
+
 import pynq
 from pynq import Overlay
 from pynq import MMIO
