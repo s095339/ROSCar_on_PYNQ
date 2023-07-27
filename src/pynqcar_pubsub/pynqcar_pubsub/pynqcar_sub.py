@@ -64,7 +64,7 @@ class SpeedPublisher(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    ov_pth = "./hardware/debug.bit"
+    ov_pth = "/home/m111061549/ROSCar_on_PYNQ/hardware/debug.bit"
     overlay = Overlay(ov_pth)
     #print("................b................")
     i2c_dev = I2C_Master(overlay)
