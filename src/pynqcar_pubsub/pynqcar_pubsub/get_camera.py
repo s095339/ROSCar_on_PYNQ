@@ -32,10 +32,16 @@ class ImageSubscriber(Node):
         I just convert the image from 2 channel to 1 channel with np.mean(),
         probably not a best way
         """
+        print("~~")
         frame_gray = np.mean(current_frame, axis=2).astype(np.uint8)
+        #frame_ch1 = current_frame[:,:,0].astype(np.uint8)
+        #frame_ch2 = current_frame[:,:,1].astype(np.uint8)
         #print(current_frame)
         #print(frame_gray.shape)
+
         cv2.imshow("camera_merged", frame_gray)
+        #cv2.imshow("camera_ch1", frame_ch1)
+        #cv2.imshow("camera_ch2", frame_ch2)
         cv2.waitKey(1)
 
 
