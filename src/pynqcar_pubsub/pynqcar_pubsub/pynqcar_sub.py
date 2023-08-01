@@ -176,7 +176,7 @@ class WheelOdomPublisher(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    ov_pth = "/home/m111061520/ROSCar_on_PYNQ/hardware/encoder.bit"
+    ov_pth = os.path.join(workspace, 'hardware', 'encoder.bit')
     overlay = Overlay(ov_pth)
     #print("................b................")
     i2c_dev = I2C_Master(overlay)
