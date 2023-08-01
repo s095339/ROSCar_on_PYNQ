@@ -32,20 +32,24 @@ class ImageSubscriber(Node):
         I just convert the image from 2 channel to 1 channel with np.mean(),
         probably not a best way
         """
-        print("~~")
+        
         frame_gray = np.mean(current_frame, axis=2).astype(np.uint8)
-        #frame_ch1 = current_frame[:,:,0].astype(np.uint8)
+        #frame_gray = current_frame[:,:,0].astype(np.uint8)
         #frame_ch2 = current_frame[:,:,1].astype(np.uint8)
         #print(current_frame)
         #print(frame_gray.shape)
 
+        #frame_ch1, frame_ch2 = cv2.split(current_frame)
         cv2.imshow("camera_merged", frame_gray)
+        #cv2.imshow("camera_merged", frame_ch1)
+        #cv2.imshow("camera_merged", frame_ch1)
         #cv2.imshow("camera_ch1", frame_ch1)
         #cv2.imshow("camera_ch2", frame_ch2)
         cv2.waitKey(1)
 
 
 def main(args=None):
+    print("open image sub")
     rclpy.init(args=args)
     Image_Subscriber = ImageSubscriber()
     rclpy.spin(Image_Subscriber)
