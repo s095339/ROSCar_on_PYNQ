@@ -44,20 +44,36 @@ class DCMotor_Car:
     def run(self,direction,speed=200):
       
         self.motor_i2c_ctrl.set_default_slave_device("Car")
-        if direction == "forward":
+        if direction == "forward" or direction =="f":
             self.M1.forward(speed)
             self.M2.forward(speed)
             self.M3.forward(speed)
             self.M4.forward(speed)
-        elif direction == "backward":
+        elif direction == "backward" or direction == "b":
             self.M1.backward(speed)
             self.M2.backward(speed)
             self.M3.backward(speed)
             self.M4.backward(speed)
-        elif direction == "left":
-            pass
-        elif direction == "right":
-            pass
+        elif direction == "right" or direction == "mr" :
+            self.M1.backward(speed)
+            self.M2.forward(speed)
+            self.M3.backward(speed)
+            self.M4.forward(speed)
+        elif direction == "left" or direction == "ml" :
+            self.M1.forward(speed)
+            self.M2.backward(speed)
+            self.M3.forward(speed)
+            self.M4.backward(speed)
+        elif direction == "rrotate" or direction == "rr": 
+            self.M1.forward(speed)
+            self.M2.forward(speed)
+            self.M3.backward(speed)
+            self.M4.backward(speed)
+        elif direction == "lrotate" or direction == "rl":
+            self.M1.backward(speed)
+            self.M2.backward(speed)
+            self.M3.forward(speed)
+            self.M4.forward(speed)
         else:
             self.M1.stop()
             self.M2.stop()
