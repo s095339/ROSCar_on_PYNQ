@@ -25,7 +25,8 @@ setup(
             'Driver = pynqcar_pubsub.ctrl_pub:main',
             'Car = pynqcar_pubsub.pynqcar_sub:main',
             'listen = pynqcar_pubsub.speed:main',
-            'lidar = pynqcar_pubsub.get_lidar:main'
+            'lidar = pynqcar_pubsub.get_lidar:main',
+            'Camera = pynqcar_pubsub.get_camera:main'
         ],
     },
 )

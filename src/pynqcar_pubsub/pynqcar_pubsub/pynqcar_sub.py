@@ -59,12 +59,9 @@ class DriverCmdSubscriber(Node):
     def listener_callback(self, msg):
         
         self.get_logger().info('I heard: "%s"' % msg.data)
-        if msg.data == "forward":
-            self.Car.run("forward")
-        elif msg.data == "backward":
-            self.Car.run("backward")
-        else:
-            self.Car.run("stop")
+        
+        self.Car.run(msg.data)
+       
 
 class SpeedPublisher(Node):
 
