@@ -22,6 +22,7 @@ from nav_msgs.msg import Odometry
 from tf2_ros import TransformBroadcaster
 from geometry_msgs.msg import TransformStamped
 from geometry_msgs.msg import Quaternion
+from geometry_msgs.msg import Twist
 
 # add python path
 import os
@@ -48,20 +49,41 @@ class DriverCmdSubscriber(Node):
 
     def __init__(self, device):
         self.Car = device
-        super().__init__('minimal_subscriber')
+        super().__init__('cmd_vel_subscriber')
         self.subscription = self.create_subscription(
-            String,
-            'drive_cmd',
+            Twist,
+            'cmd_vel',
             self.listener_callback,
             10)
         self.subscription  # prevent unused variable warning
 
     def listener_callback(self, msg):
         
-        self.get_logger().info('I heard: "%s"' % msg.data)
+        vx = msg.linear.x
+        vy = msg.linear.y
+        wz = msg.angular.z
+
+        w1 = (vx+vy-(lx+ly)*wz)/r # [rad/s], wheel rear left
+        w2 = (vx-vy-(lx+ly)*wz)/r # [rad/s], wheel front left
+        w3 = (vx+vy+(lx+ly)*wz)/r # [rad/s], wheel front right
+        w4 = (vx-vy+(lx+ly)*wz)/r # [rad/s], wheel rear right
+
+        # quantize speed [rad/s] (max +- 11.2) to -255 to 255
+        q1 = int(w1/11.2*255)
+        q2 = int(w2/11.2*255)
+        q3 = int(w3/11.2*255)
+        q4 = int(w4/11.2*255)
+
+        # for debug
+        self.get_logger().info('q1: "%d"' % q1)
+        self.get_logger().info('q2: "%d"' % q2)
+        self.get_logger().info('q3: "%d"' % q3)
+        self.get_logger().info('q4: "%d"' % q4)
         
-        self.Car.run(msg.data)
-       
+        self.Car.M1.speed(q1)
+        self.Car.M2.speed(q2)
+        self.Car.M3.speed(q3)
+        self.Car.M4.speed(q4)
 
 class SpeedPublisher(Node):
 

@@ -110,5 +110,14 @@ class DCMotor:
         setPWM(self.motor_i2c_ctrl,pin,0,0);
         pin = self.In1
         setPWM(self.motor_i2c_ctrl,pin,0,0);
+    
+    def speed(self, speed = 200):
+        if (speed > 0):
+            self.forward(speed)
+        elif(speed < 0):
+            self.backward(-speed)
+        else:
+            self.stop()
+
 
 #vector<int> dd;
