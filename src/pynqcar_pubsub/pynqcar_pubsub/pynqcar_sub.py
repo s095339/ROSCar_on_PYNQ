@@ -28,7 +28,7 @@ from geometry_msgs.msg import Twist
 import os
 import sys
 from pathlib import Path
-workspace = Path(__file__).parents[3] # 3-level up from __file__
+workspace = Path(__file__).parents[6] # 3-level up from __file__
 sys.path.append('/usr/local/share/pynq-venv/lib/python3.10/site-packages')
 sys.path.append(os.path.join(workspace, 'include'))
 sys.path.append(os.path.join(workspace, 'hardware'))
@@ -85,10 +85,10 @@ class DriverCmdSubscriber(Node):
         self.Car.M3.speed(q3)
         self.Car.M4.speed(q4)
 
-class SpeedPublisher(Node):
+class IMUPublisher(Node):
 
     def __init__(self,overlay):
-        super().__init__('minimal_publisher')
+        super().__init__('IMUPublisher')
         self.overlay = overlay
         self.publisher_ = self.create_publisher(String, 'speed_cmd', 10)
         timer_period = 0.5  # seconds
@@ -197,6 +197,7 @@ class WheelOdomPublisher(Node):
 
 
 def main(args=None):
+    print("workspace = ",workspace)
     rclpy.init(args=args)
     ov_pth = os.path.join(workspace, 'hardware', 'encoder.bit')
     overlay = Overlay(ov_pth)
@@ -207,12 +208,12 @@ def main(args=None):
     #print('................d................')
     OurCar.run("stop")
     minimal_subscriber = DriverCmdSubscriber(device=OurCar)
-    #speed_publisher = SpeedPublisher(overlay = overlay)
+    IMU_publisher = IMUPublisher(overlay = overlay)
     odom_publisher = WheelOdomPublisher(overlay = i2c_dev.overlay)
 
     executor = rclpy.executors.MultiThreadedExecutor()
     executor.add_node(minimal_subscriber)
-    #executor.add_node(speed_publisher)
+    executor.add_node(IMU_publisher)
     executor.add_node(odom_publisher)
     executor_thread = threading.Thread(target=executor.spin, daemon=True)
     executor_thread.start()
