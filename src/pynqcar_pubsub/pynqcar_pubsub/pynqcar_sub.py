@@ -92,7 +92,7 @@ class IMUPublisher(Node):
     def __init__(self, device):
         super().__init__('IMUPublisher')
         self.Imu_dev = device
-        self.publisher_ = self.create_publisher(Imu, 'Imu', 10)
+        self.publisher_ = self.create_publisher(Imu, 'imu/data_raw', 10)
         """
         baut rate: 1/115200 *10bits* NumOfData(24) =  0.02083333s per Data.
         """
@@ -140,6 +140,8 @@ class IMUPublisher(Node):
             )
         # for debug
         #self.get_logger().debug("Timer: %f sec" % current_time.to_msg())
+        imu_data.header.frame_id = 'imu'
+        self.i+=1
         self.get_logger().debug("Quaternion orientation:")
         self.get_logger().info('x:%f ,y:%f ,z:%f ,w:%f' % (q.x,q.y,q.z,q.w))
         
