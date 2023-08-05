@@ -45,6 +45,12 @@ class Serial_IMU(UartAXI):
     def get_Imu(self):
         """
         Return Data received from IMU GY_25Z
+        Data type:
+            self.data{
+                "ACC":[x,y,z],  unit:g   
+                "gyro":[x,y,z], unit:deg/sec
+                "YPR":[R,P,Y],  unit:euler angle(deg)
+            }
         """
         #init---------------------
         YPR = [0,0,0] 

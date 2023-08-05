@@ -100,6 +100,7 @@ class IMUPublisher(Node):
         timer_period = 0.01 #10ms
         self.timer = self.create_timer(timer_period, self.timer_callback)
         self.i = 0
+        self.previous_time = self.get_clock().now()
     def DEG2RAD(self, degree):
         return degree *  math.pi/180.
     def quaternion_from_euler(self, roll = 0.0, pitch = 0.0, yaw = 0.0):
@@ -125,16 +126,23 @@ class IMUPublisher(Node):
         return q
     def timer_callback(self):
         imu_data = Imu()
-
+        current_time = self.get_clock().now()
         receivedData = self.Imu_dev.get_Imu()
 
         #Data send from IMU GY_25Z through UART interface========
 
         #Data processing
-        # orientation covariance (transformed from Euler angles)
+        #Quaternion orientation (transformed from Euler angles)
         q = self.quaternion_from_euler(
-            receivedData["YPR"][0],receivedData["YPR"][1],receivedData["YPR"][2]
+            self.DEG2RAD(receivedData["YPR"][0]),
+            self.DEG2RAD(receivedData["YPR"][1]),
+            self.DEG2RAD(receivedData["YPR"][2])
             )
+        # for debug
+        #self.get_logger().debug("Timer: %f sec" % current_time.to_msg())
+        self.get_logger().debug("Quaternion orientation:")
+        self.get_logger().info('x:%f ,y:%f ,z:%f ,w:%f' % (q.x,q.y,q.z,q.w))
+        
         imu_data.orientation.x = q.x
         imu_data.orientation.y = q.y
         imu_data.orientation.z = q.z
@@ -143,11 +151,12 @@ class IMUPublisher(Node):
         imu_data.angular_velocity.x = self.DEG2RAD(receivedData["gyro"][0])
         imu_data.angular_velocity.y = self.DEG2RAD(receivedData["gyro"][1])
         imu_data.angular_velocity.z = self.DEG2RAD(receivedData["gyro"][2])
+        
         # linear_acceleration
         imu_data.linear_acceleration.x = receivedData["ACC"][0]* 9.8
         imu_data.linear_acceleration.y = receivedData["ACC"][1]* 9.8
         imu_data.linear_acceleration.z = receivedData["ACC"][2]* 9.8
-
+        self.previous_time = current_time
         self.publisher_.publish(imu_data)
 
 class WheelOdomPublisher(Node):
