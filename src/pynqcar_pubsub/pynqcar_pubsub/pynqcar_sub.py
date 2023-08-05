@@ -24,6 +24,8 @@ from geometry_msgs.msg import TransformStamped
 from geometry_msgs.msg import Quaternion
 from geometry_msgs.msg import Twist
 
+from sensor_msgs.msg import Imu
+
 # add python path
 import os
 import sys
@@ -38,7 +40,7 @@ from pynq import Overlay
 from pynq import MMIO
 from myCar.Car import DCMotor_Car
 from myCar.i2c_overlay import I2C_Master
-
+from myIMU.imu import Serial_IMU
 # Car spec, assume car goes in y direction
 lx = 0.195 # meters
 ly = 0.15 # meters
@@ -87,20 +89,40 @@ class DriverCmdSubscriber(Node):
 
 class IMUPublisher(Node):
 
-    def __init__(self,overlay):
+    def __init__(self, device):
         super().__init__('IMUPublisher')
-        self.overlay = overlay
-        self.publisher_ = self.create_publisher(String, 'speed_cmd', 10)
-        timer_period = 0.5  # seconds
+        self.Imu_dev = device
+        self.publisher_ = self.create_publisher(Imu, 'Imu', 10)
+        """
+        baut rate: 1/115200 *10bits* NumOfData(24) =  0.02083333s per Data.
+        """
+        #timer_period = 1/115200 * 10 * 24
+        timer_period = 0.01 #10ms
         self.timer = self.create_timer(timer_period, self.timer_callback)
         self.i = 0
-
+    def DEG2RAD(self, degree):
+        return degree *  math.pi/180.
     def timer_callback(self):
-        msg = String()
-        msg.data = str(self.overlay.encoder_0.read(0x04))
-        self.publisher_.publish(msg)
-        self.get_logger().info('Publishing: "%s"' % msg.data)
-        self.i += 1
+        imu_data = Imu()
+
+        receivedData = self.Imu_dev.get_Imu()
+
+        #Data send from IMU GY_25Z through UART interface========
+
+        # orientation covariance (Euler angles)
+        imu_data.orientation.x = receivedData["YPR"][0]
+        imu_data.orientation.y = receivedData["YPR"][1]
+        imu_data.orientation.z = receivedData["YPR"][2]
+        # angular_velocity
+        imu_data.angular_velocity.x = self.DEG2RAD(receivedData["gyro"][0])
+        imu_data.angular_velocity.y = self.DEG2RAD(receivedData["gyro"][1])
+        imu_data.angular_velocity.z = self.DEG2RAD(receivedData["gyro"][2])
+        # linear_acceleration
+        imu_data.linear_acceleration.x = receivedData["ACC"][0]* 9.8
+        imu_data.linear_acceleration.y = receivedData["ACC"][1]* 9.8
+        imu_data.linear_acceleration.z = receivedData["ACC"][2]* 9.8
+
+        self.publisher_.publish(imu_data)
 
 class WheelOdomPublisher(Node):
 
@@ -199,18 +221,22 @@ class WheelOdomPublisher(Node):
 def main(args=None):
     print("workspace = ",workspace)
     rclpy.init(args=args)
-    ov_pth = os.path.join(workspace, 'hardware', 'encoder.bit')
+    ov_pth = os.path.join(workspace, 'hardware', 'uart.bit')
     overlay = Overlay(ov_pth)
-    #print("................b................")
+    # For DC Motor setup(I2c interface) 
     i2c_dev = I2C_Master(overlay)
-    #print("................c................")
     OurCar = DCMotor_Car(i2c_dev)
-    #print('................d................')
     OurCar.run("stop")
-    minimal_subscriber = DriverCmdSubscriber(device=OurCar)
-    IMU_publisher = IMUPublisher(overlay = overlay)
-    odom_publisher = WheelOdomPublisher(overlay = i2c_dev.overlay)
+    # For IMU setup(Uart interface)
+    OurImu = Serial_IMU(overlay = overlay, direction = 0)
 
+
+    #Three nodes ------------------------------------------
+    minimal_subscriber = DriverCmdSubscriber(device=OurCar)
+    IMU_publisher = IMUPublisher(device = OurImu)
+    odom_publisher = WheelOdomPublisher(overlay = i2c_dev.overlay)
+    #------------------------------------------------------
+    
     executor = rclpy.executors.MultiThreadedExecutor()
     executor.add_node(minimal_subscriber)
     executor.add_node(IMU_publisher)
