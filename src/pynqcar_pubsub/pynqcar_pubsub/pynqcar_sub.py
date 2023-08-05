@@ -102,6 +102,27 @@ class IMUPublisher(Node):
         self.i = 0
     def DEG2RAD(self, degree):
         return degree *  math.pi/180.
+    def quaternion_from_euler(self, roll = 0.0, pitch = 0.0, yaw = 0.0):
+        """
+        Converts euler roll, pitch, yaw to quaternion (w in last place)
+        quat = [x, y, z, w]
+        Bellow should be replaced when porting for ROS 2 Python tf_conversions is done.
+        """
+        cy = math.cos(yaw * 0.5)
+        sy = math.sin(yaw * 0.5)
+        cp = math.cos(pitch * 0.5)
+        sp = math.sin(pitch * 0.5)
+        cr = math.cos(roll * 0.5)
+        sr = math.sin(roll * 0.5)
+
+        q = [0] * 4
+        q = Quaternion()
+        q.x = cy * cp * cr + sy * sp * sr
+        q.y = cy * cp * sr - sy * sp * cr
+        q.z = sy * cp * sr + cy * sp * cr
+        q.w = sy * cp * cr - cy * sp * sr
+
+        return q
     def timer_callback(self):
         imu_data = Imu()
 
@@ -109,10 +130,15 @@ class IMUPublisher(Node):
 
         #Data send from IMU GY_25Z through UART interface========
 
-        # orientation covariance (Euler angles)
-        imu_data.orientation.x = receivedData["YPR"][0]
-        imu_data.orientation.y = receivedData["YPR"][1]
-        imu_data.orientation.z = receivedData["YPR"][2]
+        #Data processing
+        # orientation covariance (transformed from Euler angles)
+        q = self.quaternion_from_euler(
+            receivedData["YPR"][0],receivedData["YPR"][1],receivedData["YPR"][2]
+            )
+        imu_data.orientation.x = q.x
+        imu_data.orientation.y = q.y
+        imu_data.orientation.z = q.z
+        imu_data.orientation.w = q.w
         # angular_velocity
         imu_data.angular_velocity.x = self.DEG2RAD(receivedData["gyro"][0])
         imu_data.angular_velocity.y = self.DEG2RAD(receivedData["gyro"][1])

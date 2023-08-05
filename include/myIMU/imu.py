@@ -86,9 +86,9 @@ class Serial_IMU(UartAXI):
                 print(gyro[2], end = "\t")    
 
                 print("  ,YPR:",end = "\t")
-                print(YPR[2], end = "\t") #显示航向
-                print(YPR[1], end = "\t") #显示俯仰角
-                print(YPR[0])                    #显示横滚角     
+                print(YPR[2], end = "\t") #显示航向(Y)
+                print(YPR[1], end = "\t") #显示俯仰角(P)
+                print(YPR[0])                    #显示横滚角(R)     
                 """
                 self.data["ACC"] = [ACC[0],ACC[1],ACC[2]]
                 self.data["gyro"] = [gyro[0],gyro[1],gyro[2]]
