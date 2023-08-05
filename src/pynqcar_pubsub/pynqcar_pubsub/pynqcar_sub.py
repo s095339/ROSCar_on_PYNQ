@@ -247,7 +247,7 @@ def main(args=None):
     rate = minimal_subscriber.create_rate(2)
     try:
         while rclpy.ok():
-            print('Help me body, you are my only hope')
+            #print('Help me body, you are my only hope')
             rate.sleep()
     except KeyboardInterrupt:
         pass
