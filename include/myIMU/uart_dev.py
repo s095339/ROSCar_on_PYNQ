@@ -33,10 +33,10 @@ XGPIO_DATA_OFFSET = 0x0
 XGPIO_TRI_OFFSET = 0x4
 
 class UartAXI:
-    def __init__(self, address,overlay =None):
+    def __init__(self, overlay , address = None):
         # Setup axi core
         #self.uart = MMIO(address, 0x10000, debug=False)
-        print("[Setting the Serial Uart Device]")
+        print("Setting the Serial Uart Device")
         self.address = address
         self.uart = overlay.axi_uartlite_0
     def setupCtrlReg(self):
