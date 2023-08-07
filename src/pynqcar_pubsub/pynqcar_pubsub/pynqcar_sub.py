@@ -14,6 +14,9 @@
 
 import rclpy
 from rclpy.node import Node
+from rclpy.qos import QoSDurabilityPolicy, QoSHistoryPolicy, QoSReliabilityPolicy
+from rclpy.qos import QoSProfile
+
 import threading
 import math
 
@@ -24,11 +27,13 @@ from geometry_msgs.msg import TransformStamped
 from geometry_msgs.msg import Quaternion
 from geometry_msgs.msg import Twist
 
+from sensor_msgs.msg import Imu
+
 # add python path
 import os
 import sys
 from pathlib import Path
-workspace = Path(__file__).parents[3] # 3-level up from __file__
+workspace = Path(__file__).parents[6] # 3-level up from __file__
 sys.path.append('/usr/local/share/pynq-venv/lib/python3.10/site-packages')
 sys.path.append(os.path.join(workspace, 'include'))
 sys.path.append(os.path.join(workspace, 'hardware'))
@@ -38,7 +43,7 @@ from pynq import Overlay
 from pynq import MMIO
 from myCar.Car import DCMotor_Car
 from myCar.i2c_overlay import I2C_Master
-
+from myIMU.imu import Serial_IMU
 # Car spec, assume car goes in y direction
 lx = 0.195 # meters
 ly = 0.15 # meters
@@ -85,23 +90,88 @@ class DriverCmdSubscriber(Node):
         self.Car.M3.speed(q3)
         self.Car.M4.speed(q4)
 
-class SpeedPublisher(Node):
+class IMUPublisher(Node):
 
-    def __init__(self,overlay):
-        super().__init__('minimal_publisher')
-        self.overlay = overlay
-        self.publisher_ = self.create_publisher(String, 'speed_cmd', 10)
-        timer_period = 0.5  # seconds
+    def __init__(self, device):
+        super().__init__('IMUPublisher')
+        self.Imu_dev = device
+        """
+        baut rate: 1/115200 *10bits* NumOfData(24) =  0.02083333s per Data.
+        """
+        qos_profile = QoSProfile(depth=10)
+        qos_profile.reliability = QoSReliabilityPolicy.BEST_EFFORT
+        qos_profile.durability = QoSDurabilityPolicy.VOLATILE
+
+        self.publisher_ = self.create_publisher(Imu, 'imu/data_raw', qos_profile)
+        #timer_period = 1/115200 * 10 * 24 = 0.002833
+        timer_period = 0.02 #20ms
         self.timer = self.create_timer(timer_period, self.timer_callback)
         self.i = 0
+        self.previous_time = self.get_clock().now()
+    def DEG2RAD(self, degree):
+        return degree *  math.pi/180.
+    def quaternion_from_euler(self, roll = 0.0, pitch = 0.0, yaw = 0.0):
+        """
+        Converts euler roll, pitch, yaw to quaternion (w in last place)
+        quat = [x, y, z, w]
+        Bellow should be replaced when porting for ROS 2 Python tf_conversions is done.
+        """
+        cy = math.cos(yaw * 0.5)
+        sy = math.sin(yaw * 0.5)
+        cp = math.cos(pitch * 0.5)
+        sp = math.sin(pitch * 0.5)
+        cr = math.cos(roll * 0.5)
+        sr = math.sin(roll * 0.5)
 
+        q = [0] * 4
+        q = Quaternion()
+        q.x = cy * cp * cr + sy * sp * sr
+        q.y = cy * cp * sr - sy * sp * cr
+        q.z = sy * cp * sr + cy * sp * cr
+        q.w = sy * cp * cr - cy * sp * sr
+
+        return q
     def timer_callback(self):
-        msg = String()
-        msg.data = str(self.overlay.encoder_0.read(0x04))
-        self.publisher_.publish(msg)
-        self.get_logger().info('Publishing: "%s"' % msg.data)
-        self.i += 1
+        if self.Imu_dev.uart_dev_available():
 
+            imu_data = Imu()
+            current_time = self.get_clock().now()
+            receivedData = self.Imu_dev.get_Imu()
+
+            #Data send from IMU GY_25Z through UART interface========
+
+            #Data processing
+            #Quaternion orientation (transformed from Euler angles)
+            q = self.quaternion_from_euler(
+                self.DEG2RAD(receivedData["YPR"][0]),
+                self.DEG2RAD(receivedData["YPR"][1]),
+                self.DEG2RAD(receivedData["YPR"][2])
+                )
+            # for debug
+            
+            imu_data.header.stamp = current_time.to_msg()
+            imu_data.header.frame_id = 'imu'
+            self.i+=1
+            #self.get_logger().debug("Quaternion orientation:")
+            #self.get_logger().info('x:%f ,y:%f ,z:%f ,w:%f' % (q.x,q.y,q.z,q.w))
+            
+            imu_data.orientation.x = q.x
+            imu_data.orientation.y = q.y
+            imu_data.orientation.z = q.z
+            imu_data.orientation.w = q.w
+            # angular_velocity
+            imu_data.angular_velocity.x = self.DEG2RAD(receivedData["gyro"][0])
+            imu_data.angular_velocity.y = self.DEG2RAD(receivedData["gyro"][1])
+            imu_data.angular_velocity.z = self.DEG2RAD(receivedData["gyro"][2])
+            
+            # linear_acceleration
+            imu_data.linear_acceleration.x = receivedData["ACC"][0]* 9.8
+            imu_data.linear_acceleration.y = receivedData["ACC"][1]* 9.8
+            imu_data.linear_acceleration.z = receivedData["ACC"][2]* 9.8
+            self.previous_time = current_time
+            self.publisher_.publish(imu_data)
+        else:
+            print("")
 class WheelOdomPublisher(Node):
 
     def __init__(self,overlay):
@@ -197,22 +267,27 @@ class WheelOdomPublisher(Node):
 
 
 def main(args=None):
+    print("workspace = ",workspace)
     rclpy.init(args=args)
-    ov_pth = os.path.join(workspace, 'hardware', 'encoder.bit')
+    ov_pth = os.path.join(workspace, 'hardware', 'uart.bit')
     overlay = Overlay(ov_pth)
-    #print("................b................")
+    # For DC Motor setup(I2c interface) 
     i2c_dev = I2C_Master(overlay)
-    #print("................c................")
     OurCar = DCMotor_Car(i2c_dev)
-    #print('................d................')
     OurCar.run("stop")
-    minimal_subscriber = DriverCmdSubscriber(device=OurCar)
-    #speed_publisher = SpeedPublisher(overlay = overlay)
-    odom_publisher = WheelOdomPublisher(overlay = i2c_dev.overlay)
+    # For IMU setup(Uart interface)
+    OurImu = Serial_IMU(overlay = overlay, direction = 0)
 
+
+    #Three nodes ------------------------------------------
+    minimal_subscriber = DriverCmdSubscriber(device=OurCar)
+    IMU_publisher = IMUPublisher(device = OurImu)
+    odom_publisher = WheelOdomPublisher(overlay = i2c_dev.overlay)
+    #------------------------------------------------------
+    
     executor = rclpy.executors.MultiThreadedExecutor()
     executor.add_node(minimal_subscriber)
-    #executor.add_node(speed_publisher)
+    executor.add_node(IMU_publisher)
     executor.add_node(odom_publisher)
     executor_thread = threading.Thread(target=executor.spin, daemon=True)
     executor_thread.start()
@@ -220,7 +295,7 @@ def main(args=None):
     rate = minimal_subscriber.create_rate(2)
     try:
         while rclpy.ok():
-            print('Help me body, you are my only hope')
+            #print('Help me body, you are my only hope')
             rate.sleep()
     except KeyboardInterrupt:
         pass
