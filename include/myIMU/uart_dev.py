@@ -45,7 +45,6 @@ class UartAXI:
         sleep(1)
         self.uart.write(CTRL_REG, 0)
         sleep(1)
-
     def read(self, count, timeout=10):
         # status = currentStatus(uart) bad idea
         buf = []
@@ -58,7 +57,6 @@ class UartAXI:
                 break
             buf.append(self.uart.read(RX_FIFO))
         return buf
-
     def write(self, buf, timeout=10):
         # Write bytes via UART
         stop_time = time() + timeout
@@ -73,7 +71,8 @@ class UartAXI:
             self.uart.write(TX_FIFO, i)
             wr_count += 1
         return wr_count
-
+    def uart_dev_available(self):
+        return (self.uart.read(STAT_REG) & 1 << RX_VALID)
 if __name__ == "__main__":
     uart = UartAXI(address,ol)
     # Setup AXI UART register
