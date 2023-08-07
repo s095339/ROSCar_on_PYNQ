@@ -14,6 +14,9 @@
 
 import rclpy
 from rclpy.node import Node
+from rclpy.qos import QoSDurabilityPolicy, QoSHistoryPolicy, QoSReliabilityPolicy
+from rclpy.qos import QoSProfile
+
 import threading
 import math
 
@@ -92,12 +95,16 @@ class IMUPublisher(Node):
     def __init__(self, device):
         super().__init__('IMUPublisher')
         self.Imu_dev = device
-        self.publisher_ = self.create_publisher(Imu, 'imu/data_raw', 10)
         """
         baut rate: 1/115200 *10bits* NumOfData(24) =  0.02083333s per Data.
         """
-        #timer_period = 1/115200 * 10 * 24
-        timer_period = 0.01 #10ms
+        qos_profile = QoSProfile(depth=10)
+        qos_profile.reliability = QoSReliabilityPolicy.BEST_EFFORT
+        qos_profile.durability = QoSDurabilityPolicy.VOLATILE
+
+        self.publisher_ = self.create_publisher(Imu, 'imu/data_raw', qos_profile)
+        #timer_period = 1/115200 * 10 * 24 = 0.002833
+        timer_period = 0.02 #20ms
         self.timer = self.create_timer(timer_period, self.timer_callback)
         self.i = 0
         self.previous_time = self.get_clock().now()
@@ -125,42 +132,46 @@ class IMUPublisher(Node):
 
         return q
     def timer_callback(self):
-        imu_data = Imu()
-        current_time = self.get_clock().now()
-        receivedData = self.Imu_dev.get_Imu()
+        if self.Imu_dev.uart_dev_available():
 
-        #Data send from IMU GY_25Z through UART interface========
+            imu_data = Imu()
+            current_time = self.get_clock().now()
+            receivedData = self.Imu_dev.get_Imu()
 
-        #Data processing
-        #Quaternion orientation (transformed from Euler angles)
-        q = self.quaternion_from_euler(
-            self.DEG2RAD(receivedData["YPR"][0]),
-            self.DEG2RAD(receivedData["YPR"][1]),
-            self.DEG2RAD(receivedData["YPR"][2])
-            )
-        # for debug
-        #self.get_logger().debug("Timer: %f sec" % current_time.to_msg())
-        imu_data.header.frame_id = 'imu'
-        self.i+=1
-        self.get_logger().debug("Quaternion orientation:")
-        self.get_logger().info('x:%f ,y:%f ,z:%f ,w:%f' % (q.x,q.y,q.z,q.w))
-        
-        imu_data.orientation.x = q.x
-        imu_data.orientation.y = q.y
-        imu_data.orientation.z = q.z
-        imu_data.orientation.w = q.w
-        # angular_velocity
-        imu_data.angular_velocity.x = self.DEG2RAD(receivedData["gyro"][0])
-        imu_data.angular_velocity.y = self.DEG2RAD(receivedData["gyro"][1])
-        imu_data.angular_velocity.z = self.DEG2RAD(receivedData["gyro"][2])
-        
-        # linear_acceleration
-        imu_data.linear_acceleration.x = receivedData["ACC"][0]* 9.8
-        imu_data.linear_acceleration.y = receivedData["ACC"][1]* 9.8
-        imu_data.linear_acceleration.z = receivedData["ACC"][2]* 9.8
-        self.previous_time = current_time
-        self.publisher_.publish(imu_data)
+            #Data send from IMU GY_25Z through UART interface========
 
+            #Data processing
+            #Quaternion orientation (transformed from Euler angles)
+            q = self.quaternion_from_euler(
+                self.DEG2RAD(receivedData["YPR"][0]),
+                self.DEG2RAD(receivedData["YPR"][1]),
+                self.DEG2RAD(receivedData["YPR"][2])
+                )
+            # for debug
+            
+            imu_data.header.stamp = current_time.to_msg()
+            imu_data.header.frame_id = 'imu'
+            self.i+=1
+            #self.get_logger().debug("Quaternion orientation:")
+            #self.get_logger().info('x:%f ,y:%f ,z:%f ,w:%f' % (q.x,q.y,q.z,q.w))
+            
+            imu_data.orientation.x = q.x
+            imu_data.orientation.y = q.y
+            imu_data.orientation.z = q.z
+            imu_data.orientation.w = q.w
+            # angular_velocity
+            imu_data.angular_velocity.x = self.DEG2RAD(receivedData["gyro"][0])
+            imu_data.angular_velocity.y = self.DEG2RAD(receivedData["gyro"][1])
+            imu_data.angular_velocity.z = self.DEG2RAD(receivedData["gyro"][2])
+            
+            # linear_acceleration
+            imu_data.linear_acceleration.x = receivedData["ACC"][0]* 9.8
+            imu_data.linear_acceleration.y = receivedData["ACC"][1]* 9.8
+            imu_data.linear_acceleration.z = receivedData["ACC"][2]* 9.8
+            self.previous_time = current_time
+            self.publisher_.publish(imu_data)
+        else:
+            print("")
 class WheelOdomPublisher(Node):
 
     def __init__(self,overlay):
