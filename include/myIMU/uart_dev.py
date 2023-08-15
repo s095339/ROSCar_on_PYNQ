@@ -38,12 +38,13 @@ class UartAXI:
         #self.uart = MMIO(address, 0x10000, debug=False)
         print("Setting the Serial Uart Device")
         self.address = address
+        self.overlay = overlay
         self.uart = overlay.axi_uartlite_0
     def setupCtrlReg(self):
-        # Reset FIFOs, disable interrupts
-        self.uart.write(CTRL_REG, 1 << RST_TX | 1 << RST_RX)
+        # Reset FIFOs, enable interrupts
+        self.uart.write(CTRL_REG, 1 << RST_TX | 1 << RST_RX | 1 << INTR_EN )
         sleep(1)
-        self.uart.write(CTRL_REG, 0)
+        self.uart.write(CTRL_REG, 0| 1 << INTR_EN)
         sleep(1)
     def read(self, count, timeout=10):
         # status = currentStatus(uart) bad idea

@@ -119,10 +119,13 @@ class IMUPublisher(Node):
         #self.timer = self.create_timer(timer_period, self.timer_callback)
         self.i = 0
         self.previous_time = self.get_clock().now()
-        #interrupt control
-        self.intr = Interrupt('axi_uartlite_0/interrupt')
         self.pub_data()
-
+        #interrupt control
+        #self.loop = asyncio.get_event_loop() 
+        #print(device.uart._interrupts)
+        #self.uart_interrupt = Interrupt('axi_uartlite_0/interrupt')
+        #asyncio.run(self.pub_data())
+        #self.loop.run_until_complete(self.pub_data())
     def DEG2RAD(self, degree):
         return degree *  math.pi/180.
     def quaternion_from_euler(self, roll = 0.0, pitch = 0.0, yaw = 0.0):
@@ -146,6 +149,7 @@ class IMUPublisher(Node):
         q.w = sy * cp * cr - cy * sp * sr
 
         return q
+    #async def pub_data(self):
     def pub_data(self):
         YPR = [0,0,0] 
         gyro=[0,0,0] #角速度
@@ -154,9 +158,13 @@ class IMUPublisher(Node):
         sign=0
         cnt=0
         receivedData = {}
+        #clean Rx FIFO-------
+        self.Imu_dev.setupCtrlReg()
+        #--------------------
         while True:
             #if self.Imu_dev.uart_dev_available():
-
+            #print("waiting for interrupt")
+            #asyncio.run(self.uart_interrupt.wait()) # wait for interrupt
             imu_data = Imu()
             current_time = self.get_clock().now()
             #------------------------------------
