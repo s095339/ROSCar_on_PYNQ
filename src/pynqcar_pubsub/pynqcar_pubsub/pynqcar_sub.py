@@ -26,6 +26,8 @@ from std_msgs.msg import Float64MultiArray
 from geometry_msgs.msg import Quaternion
 from sensor_msgs.msg import Imu
 
+from sensor_msgs.msg import Imu
+
 # add python path
 import os
 import sys
@@ -46,6 +48,7 @@ import numpy as np
 # Car spec, assume car goes in x direction
 lx = 0.075 # meters
 ly = 0.0975 # meters
+
 r = 0.0275 # meters
 
 class IMUPublisher(Node):
@@ -80,14 +83,12 @@ class IMUPublisher(Node):
         sp = math.sin(pitch * 0.5)
         cr = math.cos(roll * 0.5)
         sr = math.sin(roll * 0.5)
-
         q = [0] * 4
         q = Quaternion()
         q.x = cy * cp * cr + sy * sp * sr
         q.y = cy * cp * sr - sy * sp * cr
         q.z = sy * cp * sr + cy * sp * cr
         q.w = sy * cp * cr - cy * sp * sr
-
         return q
     def timer_callback(self):
         if self.Imu_dev.uart_dev_available():
