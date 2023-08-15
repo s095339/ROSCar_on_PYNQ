@@ -15,6 +15,11 @@ def generate_launch_description():
         ),
         Node(
             package='pynqcar_pubsub',
+            executable='wheel_odom',
+            name='wheel_odom'
+        ),
+        Node(
+            package='pynqcar_pubsub',
             executable='Car',
             name='Car',
             #remappings=[

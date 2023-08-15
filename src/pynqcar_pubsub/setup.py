@@ -24,6 +24,8 @@ setup(
         'console_scripts': [
             'Driver = pynqcar_pubsub.ctrl_pub:main',
             'Car = pynqcar_pubsub.pynqcar_sub:main',
+            'wheel_odom = pynqcar_pubsub.wheel_odom:main',
+            'mouse_odom = pynqcar_pubsub.mouse_odom:main',
             'listen = pynqcar_pubsub.speed:main',
             'lidar = pynqcar_pubsub.get_lidar:main',
             'Camera = pynqcar_pubsub.get_camera:main'
