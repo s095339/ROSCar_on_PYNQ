@@ -40,6 +40,7 @@ class UartAXI:
         self.address = address
         self.overlay = overlay
         self.uart = overlay.axi_uartlite_0
+        self.setupCtrlReg()
     def setupCtrlReg(self):
         # Reset FIFOs, enable interrupts
         self.uart.write(CTRL_REG, 1 << RST_TX | 1 << RST_RX | 1 << INTR_EN )
