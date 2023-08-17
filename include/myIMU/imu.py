@@ -48,7 +48,7 @@ class Serial_IMU(UartAXI):
         delay(100); 
 
         #輸出更新頻率
-        #self.write([0xA5,0x59,0x01,0xFF])  #10hz 輸出設置指令
+        self.write([0xA5,0x59,0x01,0xFF])  #10hz 輸出設置指令
         #self.write([0xA5,0x59,0x02,0x00 ]) #50hz
         #delay(100); 
         #self.write([0xA5,0x59,0x03,0x01]) #100hz 輸出設置指令
@@ -82,7 +82,7 @@ class Serial_IMU(UartAXI):
         sign=0
         #get data----------------
         cnt=0
-        while cnt < 24:
+        while cnt < 23:
             Re_buf[cnt] = np.int8(self.read(1)[0])
             if(cnt==0 and Re_buf[0]!=0x5A):
                 continue
