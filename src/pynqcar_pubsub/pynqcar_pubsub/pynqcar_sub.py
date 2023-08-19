@@ -19,6 +19,8 @@ from rclpy.qos import QoSProfile
 
 import threading
 import math
+import asyncio 
+import numpy as np
 
 from std_msgs.msg import String
 from geometry_msgs.msg import Twist
@@ -32,7 +34,7 @@ from sensor_msgs.msg import Imu
 import os
 import sys
 from pathlib import Path
-workspace = Path(__file__).parents[3] # 3-level up from __file__
+workspace = Path(__file__).parents[6] # 3-level up from __file__
 sys.path.append('/usr/local/share/pynq-venv/lib/python3.10/site-packages')
 sys.path.append(os.path.join(workspace, 'include'))
 sys.path.append(os.path.join(workspace, 'hardware'))
@@ -40,6 +42,9 @@ sys.path.append(os.path.join(workspace, 'hardware'))
 import pynq
 from pynq import Overlay
 from pynq import MMIO
+from pynq.interrupt import Interrupt
+
+
 from myCar.Car import DCMotor_Car
 from myCar.i2c_overlay import I2C_Master
 from myIMU.imu import Serial_IMU
@@ -50,87 +55,6 @@ lx = 0.075 # meters
 ly = 0.0975 # meters
 
 r = 0.0275 # meters
-
-class IMUPublisher(Node):
-
-    def __init__(self, device):
-        super().__init__('IMUPublisher')
-        self.Imu_dev = device
-        """
-        baut rate: 1/115200 *10bits* NumOfData(24) =  0.02083333s per Data.
-        """
-        qos_profile = QoSProfile(depth=10)
-        qos_profile.reliability = QoSReliabilityPolicy.BEST_EFFORT
-        qos_profile.durability = QoSDurabilityPolicy.VOLATILE
-
-        self.publisher_ = self.create_publisher(Imu, 'imu/data_raw', qos_profile)
-        #timer_period = 1/115200 * 10 * 24 = 0.002833
-        timer_period = 0.02 #20ms
-        self.timer = self.create_timer(timer_period, self.timer_callback)
-        self.i = 0
-        self.previous_time = self.get_clock().now()
-    def DEG2RAD(self, degree):
-        return degree *  math.pi/180.
-    def quaternion_from_euler(self, roll = 0.0, pitch = 0.0, yaw = 0.0):
-        """
-        Converts euler roll, pitch, yaw to quaternion (w in last place)
-        quat = [x, y, z, w]
-        Bellow should be replaced when porting for ROS 2 Python tf_conversions is done.
-        """
-        cy = math.cos(yaw * 0.5)
-        sy = math.sin(yaw * 0.5)
-        cp = math.cos(pitch * 0.5)
-        sp = math.sin(pitch * 0.5)
-        cr = math.cos(roll * 0.5)
-        sr = math.sin(roll * 0.5)
-        q = [0] * 4
-        q = Quaternion()
-        q.x = cy * cp * cr + sy * sp * sr
-        q.y = cy * cp * sr - sy * sp * cr
-        q.z = sy * cp * sr + cy * sp * cr
-        q.w = sy * cp * cr - cy * sp * sr
-        return q
-    def timer_callback(self):
-        if self.Imu_dev.uart_dev_available():
-
-            imu_data = Imu()
-            current_time = self.get_clock().now()
-            receivedData = self.Imu_dev.get_Imu()
-
-            #Data send from IMU GY_25Z through UART interface========
-
-            #Data processing
-            #Quaternion orientation (transformed from Euler angles)
-            q = self.quaternion_from_euler(
-                self.DEG2RAD(receivedData["YPR"][0]),
-                self.DEG2RAD(receivedData["YPR"][1]),
-                self.DEG2RAD(receivedData["YPR"][2])
-                )
-            # for debug
-            
-            imu_data.header.stamp = current_time.to_msg()
-            imu_data.header.frame_id = 'imu'
-            self.i+=1
-            #self.get_logger().debug("Quaternion orientation:")
-            #self.get_logger().info('x:%f ,y:%f ,z:%f ,w:%f' % (q.x,q.y,q.z,q.w))
-            
-            imu_data.orientation.x = q.x
-            imu_data.orientation.y = q.y
-            imu_data.orientation.z = q.z
-            imu_data.orientation.w = q.w
-            # angular_velocity
-            imu_data.angular_velocity.x = self.DEG2RAD(receivedData["gyro"][0])
-            imu_data.angular_velocity.y = self.DEG2RAD(receivedData["gyro"][1])
-            imu_data.angular_velocity.z = self.DEG2RAD(receivedData["gyro"][2])
-            
-            # linear_acceleration
-            imu_data.linear_acceleration.x = receivedData["ACC"][0]* 9.8
-            imu_data.linear_acceleration.y = receivedData["ACC"][1]* 9.8
-            imu_data.linear_acceleration.z = receivedData["ACC"][2]* 9.8
-            self.previous_time = current_time
-            self.publisher_.publish(imu_data)
-        else:
-            print("")
 
 class PIDspeedControl(Node):
     def __init__(self,overlay, PID = True):
@@ -198,7 +122,7 @@ class PIDspeedControl(Node):
     def timer_callback(self):
         current_time = self.get_clock().now()
         dt = (current_time - self.previous_time).to_msg().nanosec / 1E9 # actually from 0.02~0.05 seconds
-
+        
         # M1 ~ M4 is current encoder values
         M1 = self.uint32toint(self.overlay.encoder_0.read(0x00)) # wheel rear left [encoder ticks]
         M2 = self.uint32toint(self.overlay.encoder_0.read(0x04)) # wheel front left [encoder ticks]
@@ -276,6 +200,7 @@ class PIDspeedControl(Node):
         return value
 
     def listener_callback(self, msg):
+        #self.get_logger("I heard:", msg)
         vx = msg.linear.x
         vy = msg.linear.y
         wz = msg.angular.z
@@ -284,6 +209,11 @@ class PIDspeedControl(Node):
         self.t3 = (vx+vy+(lx+ly)*wz)/r # target speed [rad/s], wheel front right
         self.t4 = (vx-vy+(lx+ly)*wz)/r # target speed [rad/s], wheel rear right
 
+
+#serial_interrupt
+
+
+       
 def main(args=None):
     print("workspace = ",workspace)
     rclpy.init(args=args)
@@ -293,34 +223,35 @@ def main(args=None):
     i2c_dev = I2C_Master(overlay)
     OurCar = DCMotor_Car(i2c_dev)
     OurCar.run("stop")
-    # For IMU setup(Uart interface)
-    OurImu = Serial_IMU(overlay = overlay, direction = 0)
-    pid = PIDspeedControl(overlay = overlay, PID = True)
-
-    #Three nodes ------------------------------------------
-    IMU_publisher = IMUPublisher(device = OurImu)
-    #------------------------------------------------------
     
+    #nodes ------------------------------------------
+    pid = PIDspeedControl(overlay = overlay, PID = True)
+    
+   
+    #------------------------------------------------------
     executor = rclpy.executors.MultiThreadedExecutor()
-    executor.add_node(IMU_publisher)
+    #executor.add_node(IMU_publisher)
     executor.add_node(pid)
     executor_thread = threading.Thread(target=executor.spin, daemon=True)
     executor_thread.start()
     rate = pid.create_rate(2)
+    
+    
     try:
         while rclpy.ok():
             #print('Help me body, you are my only hope')
             rate.sleep()
     except KeyboardInterrupt:
+        
         pass
     rclpy.shutdown()
     executor_thread.join()
     OurCar.run("stop")
+    executor.shutdown()
     # Destroy the node explicitly
     # (optional - otherwise it will be done automatically
     # when the garbage collector destroys the node object)
-    #minimal_subscriber.destroy_node()
-    #rclpy.shutdown()
+    
 
 
 if __name__ == '__main__':

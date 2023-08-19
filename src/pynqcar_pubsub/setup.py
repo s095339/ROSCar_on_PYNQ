@@ -28,7 +28,8 @@ setup(
             'mouse_odom = pynqcar_pubsub.mouse_odom:main',
             'listen = pynqcar_pubsub.speed:main',
             'lidar = pynqcar_pubsub.get_lidar:main',
-            'Camera = pynqcar_pubsub.get_camera:main'
+            'Camera = pynqcar_pubsub.get_camera:main',
+            'Imu = pynqcar_pubsub.imu:main'
         ],
     },
 )
