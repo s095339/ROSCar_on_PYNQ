@@ -25,5 +25,10 @@ def generate_launch_description():
             #remappings=[
             #    ('/', '/turtlesim1/turtle1/pose'),
             #]
+        ),
+        Node(
+            package='pynqcar_pubsub',
+            executable='Imu',
+            name='Imu'
         )
     ])
