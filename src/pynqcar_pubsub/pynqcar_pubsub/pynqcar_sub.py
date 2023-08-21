@@ -34,7 +34,8 @@ from sensor_msgs.msg import Imu
 import os
 import sys
 from pathlib import Path
-workspace = Path(__file__).parents[6] # 3-level up from __file__
+workspace = Path(__file__).parents[3] # 3-level up from __file__
+print("workspace = ",workspace)
 sys.path.append('/usr/local/share/pynq-venv/lib/python3.10/site-packages')
 sys.path.append(os.path.join(workspace, 'include'))
 sys.path.append(os.path.join(workspace, 'hardware'))
@@ -53,7 +54,6 @@ import numpy as np
 # Car spec, assume car goes in x direction
 lx = 0.075 # meters
 ly = 0.0975 # meters
-
 r = 0.0275 # meters
 
 class PIDspeedControl(Node):
@@ -208,14 +208,8 @@ class PIDspeedControl(Node):
         self.t2 = (vx-vy-(lx+ly)*wz)/r # target speed [rad/s], wheel front left
         self.t3 = (vx+vy+(lx+ly)*wz)/r # target speed [rad/s], wheel front right
         self.t4 = (vx-vy+(lx+ly)*wz)/r # target speed [rad/s], wheel rear right
-
-
-#serial_interrupt
-
-
-       
+      
 def main(args=None):
-    print("workspace = ",workspace)
     rclpy.init(args=args)
     ov_pth = os.path.join(workspace, 'hardware', 'uart.bit')
     overlay = Overlay(ov_pth)
@@ -223,36 +217,17 @@ def main(args=None):
     i2c_dev = I2C_Master(overlay)
     OurCar = DCMotor_Car(i2c_dev)
     OurCar.run("stop")
-    
-    #nodes ------------------------------------------
+
     pid = PIDspeedControl(overlay = overlay, PID = True)
-    
-   
-    #------------------------------------------------------
-    executor = rclpy.executors.MultiThreadedExecutor()
-    #executor.add_node(IMU_publisher)
-    executor.add_node(pid)
-    executor_thread = threading.Thread(target=executor.spin, daemon=True)
-    executor_thread.start()
-    rate = pid.create_rate(2)
-    
-    
-    try:
-        while rclpy.ok():
-            #print('Help me body, you are my only hope')
-            rate.sleep()
-    except KeyboardInterrupt:
-        
-        pass
-    rclpy.shutdown()
-    executor_thread.join()
+
+    rclpy.spin(pid)
+
     OurCar.run("stop")
-    executor.shutdown()
     # Destroy the node explicitly
     # (optional - otherwise it will be done automatically
     # when the garbage collector destroys the node object)
-    
-
+    pid.destroy_node()
+    rclpy.shutdown()
 
 if __name__ == '__main__':
     main()
