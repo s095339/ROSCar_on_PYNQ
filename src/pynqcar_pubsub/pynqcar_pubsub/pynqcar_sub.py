@@ -34,7 +34,10 @@ from sensor_msgs.msg import Imu
 import os
 import sys
 from pathlib import Path
-workspace = Path(__file__).parents[3] # 3-level up from __file__
+for i in range(10):
+    workspace = Path(__file__).parents[i] # __file__ is location of current file in install
+    if str(workspace).split('/')[-1] == 'ROSCar_on_PYNQ': # detect folder name
+        break
 print("workspace = ",workspace)
 sys.path.append('/usr/local/share/pynq-venv/lib/python3.10/site-packages')
 sys.path.append(os.path.join(workspace, 'include'))
