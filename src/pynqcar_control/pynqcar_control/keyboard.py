@@ -162,7 +162,8 @@ def main(args=None):
 					D3 = 0.0
 					D4 = 0.0
 
-					pub.publish(twist_val(x = 1, y = 0, z = 0, th = 0, speed = speed, turn = turn))
+					x, y, z, th = moveBindings[cmd]
+					pub.publish(twist_val(x = x, y = y, z = z, th = th, speed = speed, turn = turn))
 					if unit == 'm':
 						while -float(length) <= (D1 + D2 + D3+ D4) / 4 <= float(length): # meters
 							try: # for emergency break: crtl-c
@@ -179,7 +180,13 @@ def main(args=None):
 								pub.publish(twist_val(x = 0, y = 0, z = 0, th = 0, speed = speed, turn = turn))
 					else:
 						print('no such unit: ', unit)
-					pub.publish(twist_val(x = 0, y = 0, z = 0, th = 0, speed = speed, turn = turn))
+					x = 0.0
+					y = 0.0
+					z = 0.0
+					th = 0.0
+					print('done')
+					pub.publish(twist_val(x = x, y = y, z = z, th = th, speed = speed, turn = turn))
+					
 				elif 'q' in cmd or 'e' in cmd: # rotation
 					start_M1 = uint32toint(overlay.encoder_0.read(0x00)) # wheel rear left [encoder ticks]
 					start_M2 = uint32toint(overlay.encoder_0.read(0x04)) # wheel front left [encoder ticks]
