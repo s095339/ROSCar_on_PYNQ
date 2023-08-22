@@ -4,7 +4,7 @@ import numpy as np
 import time
 from time import sleep, time
 from .uart_dev import UartAXI
-
+from .uart_dev import *
 def delay(minsec):
     """
     delay in minsec
@@ -63,6 +63,24 @@ class Serial_IMU(UartAXI):
             print("set mode to vertical mode")
             self.write([0xA5,0x5B,0x01,0x01])
         delay(100); 
+    def read_Imu(self, count, timeout=10):
+        # status = currentStatus(uart) bad idea
+        buf = []
+        stop_time = time() + timeout
+        i=0
+        while i <count:
+            # Wait till RX fifo has valid data, stop waiting if timeoutpasses
+            while (not (self.uart.read(STAT_REG) & 1 << RX_VALID)) and (time() < stop_time):
+                pass
+            if time() >= stop_time:
+                break
+            ret = np.int8(self.uart.read(RX_FIFO))
+            if i == 0 and ret!=0x5A:
+                continue
+            buf.append(ret)
+            i+=1
+        sign=1
+        return buf, sign
     def get_Imu(self):
         """
         Return Data received from IMU GY_25Z
