@@ -30,6 +30,8 @@
 
 
     <!-- CHASSIS LINK -->
+
+
     <!--setting for pynqcar_chassis -->
     <!-- ======================================================================= -->
     <!-- origin, size, mass of pynqcar chassis -->
@@ -66,5 +68,104 @@
     </link>
     
 
+    <!-- LEFT FRONT WHEEL LINK -->
+    <joint name="left_front_wheel_joint" type="continuous">
+        <parent link="base_link"/>
+        <child link="left_front_wheel"/>
+        <!--
+            cylinder is by defualt are oriented along the z-axis
+            we need out wheel to be oriented along the y-axis(base_link)
+        -->
+        <!-- 輪子約在車身1/4處-->
+        <origin xyz = "0.125 0.15 0" rpy="-${pi/2} 0 0"/> 
+        <!--axis of rotation-->
+        <!--rotate around z axis of wheel, anti-clockwise=>positive (right hand rule) -->
+        <axis xyz="0 0 1"/>
+    </joint>
 
+    <!-- LEFT FRONT WHEEL LINK -->
+    <link name="left_front_wheel">
+        <visual>
+            <geometry>
+                <cylinder radius = "0.05" length = "0.04"/>
+            </geometry>
+            <material name="black"/>
+        </visual>
+    </link>
+
+
+    <!-- LEFT BACK WHEEL LINK -->
+    <joint name="left_back_wheel_joint" type="continuous">
+        <parent link="base_link"/>
+        <child link="left_back_wheel"/>
+        <!--
+            cylinder is by defualt are oriented along the z-axis
+            we need out wheel to be oriented along the y-axis(base_link)
+        -->
+        <!-- 輪子約在車身3/4處 車身左側-->
+        <origin xyz = "-0.125 0.15 0" rpy="-${pi/2} 0 0"/> 
+        <!--axis of rotation-->
+        <!--rotate around z axis of wheel, anti-clockwise=>positive (right hand rule) -->
+        <axis xyz="0 0 1"/>
+    </joint>
+
+    <!-- LEFT BACK WHEEL LINK -->
+    <link name="left_back_wheel">
+        <visual>
+            <geometry>
+                <cylinder radius = "0.05" length = "0.04"/>
+            </geometry>
+            <material name="black"/>
+        </visual>
+    </link>
+
+    <!-- RIGHT FRONT WHEEL LINK -->
+    <joint name="right_front_wheel_joint" type="continuous">
+        <parent link="base_link"/>
+        <child link="right_front_wheel"/>
+        <!--
+            cylinder is by defualt are oriented along the z-axis
+            we need out wheel to be oriented along the y-axis(base_link)
+        -->
+        <!-- 輪子約在車身1/4處-->
+        <origin xyz = "0.125 -0.15 0" rpy="${pi/2} 0 0"/> 
+        <!--axis of rotation-->
+        <!--rotate around z axis of wheel, anti-clockwise=>positive (right hand rule) -->
+        <axis xyz="0 0 -1"/>
+    </joint>
+
+    <!-- RIGH FRONT WHEEL LINK -->
+    <link name="right_front_wheel">
+        <visual>
+            <geometry>
+                <cylinder radius = "0.05" length = "0.04"/>
+            </geometry>
+            <material name="black"/>
+        </visual>
+    </link>
+
+    <!-- RIGHT BACK WHEEL LINK -->
+    <joint name="right_back_wheel_joint" type="continuous">
+        <parent link="base_link"/>
+        <child link="right_back_wheel"/>
+        <!--
+            cylinder is by defualt are oriented along the z-axis
+            we need out wheel to be oriented along the y-axis(base_link)
+        -->
+        <!-- 輪子約在車身3/4處 車身左側-->
+        <origin xyz = "-0.125 -0.15 0" rpy="${pi/2} 0 0"/> 
+        <!--axis of rotation-->
+        <!--rotate around z axis of wheel, anti-clockwise=>positive (right hand rule) -->
+        <axis xyz="0 0 -1"/>
+    </joint>
+
+    <!-- RIGHT FRONT WHEEL LINK -->
+    <link name="right_back_wheel">
+        <visual>
+            <geometry>
+                <cylinder radius = "0.05" length = "0.04"/>
+            </geometry>
+            <material name="black"/>
+        </visual>
+    </link>
 </robot>
