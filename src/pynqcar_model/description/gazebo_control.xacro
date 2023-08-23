@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <gazebo>
+            <plugin name="wheel_drive" filename="libgazebo_ros_planar_move.so">
+                <commandTopic>cmd_vel</commandTopic>
+                <odometryTopic>odom</odometryTopic>
+                <odometryFrame>odom</odometryFrame>
+                <odometryRate>50.0</odometryRate>
+                <robotBaseFram>base_link</robotBaseFram>
+            </plugin>
+    </gazebo>
+
+</robot>
