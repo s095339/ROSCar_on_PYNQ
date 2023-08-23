@@ -1,0 +1,70 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" >
+
+    <xacro:include filename="inertial_macros.xacro"/>
+
+
+    <!-- Color setting-->
+    <material name="white">
+        <color rgba="1 1 1 1" />
+    </material>
+
+    <material name="orange">
+        <color rgba="1 0.3 0.1 1"/>
+    </material>
+
+    <material name="blue">
+        <color rgba="0.2 0.2 1 1"/>
+    </material>
+
+    <material name="black">
+        <color rgba="0 0 0 1"/>
+    </material>
+
+
+    <!-- BASE LINK -->
+
+    <link name="base_link">
+
+    </link>
+
+
+    <!-- CHASSIS LINK -->
+    <!--setting for pynqcar_chassis -->
+    <!-- ======================================================================= -->
+    <!-- origin, size, mass of pynqcar chassis -->
+    <xacro:property name="chassis_origin" value="0.25 0 0.1" />   <!--移動機殼 讓base_link在車身中央之底部 同樣地，chassis之origin也在底部 所以x跟z分別往前和往上移動size的一半-->
+    <xacro:property name="chassis_geometry" value="0.5 0.3 0.2" />  <!--大致估測整個機殼大小，我認為z方向應該不是重點-->
+    <xacro:property name="chassis_mass" value="0.5" />
+    <xacro:property name="chassis_massx" value="0.3" />
+    <xacro:property name="chassis_massy" value="0.3" />
+    <xacro:property name="chassis_massz" value="0.15" />
+    <!--======================================================================= -->
+    <joint name="chassis_joint" type="fixed">
+        <parent link="base_link"/>
+        <child link="chassis"/>
+        <origin xyz="-0.25 0 0"/>    <!--希望機殼的origin 在baselink的後方 使得baselink正好在車身正中央 那麼x值應為機殼大小x值之一半-->
+    </joint>
+
+    <link name="chassis">
+        <visual>
+            <origin xyz="${chassis_origin}"/>
+            <geometry>
+                <box size="${chassis_geometry}"/>
+            </geometry>
+            <material name="orange"/>
+        </visual>
+        <collision>
+            <origin xyz="${chassis_origin}"/>
+            <geometry>
+                <box size="${chassis_geometry}"/>
+            </geometry>
+        </collision>
+        <xacro:inertial_box mass="${chassis_mass}" x="${chassis_massx}" y="${chassis_massy}" z="${chassis_massz}">
+            <origin xyz="${chassis_origin}" rpy="0 0 0"/>
+        </xacro:inertial_box>
+    </link>
+    
+
+
+</robot>
