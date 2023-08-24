@@ -3,6 +3,7 @@
 
     <xacro:include filename="inertial_macros.xacro"/>
     <xacro:include filename ="mech/mecanum_wheel.urdf.xacro"/>
+    <xacro:include filename = "sensor/lidar.xacro"/>
 
 
     <!-- Color setting-->
@@ -22,6 +23,9 @@
         <color rgba="0 0 0 1"/>
     </material>
 
+    <material name="red">
+        <color rgba="1 0 0 1"/>
+    </material>
 
     <!-- BASE LINK -->
 
@@ -301,4 +305,15 @@
         </material>
     </gazebo>
 
+    <!--sensor-->
+    <!--lidar-->
+
+    <xacro:lidar
+    joint_xyz = "-0.1 0 ${chassis_size_z + 0.02}" 
+    joint_rpy = "0 0 0"
+    radius = "0.05"
+    length = "0.04"
+    color = "red"
+    mass = "0.1"
+    />
 </robot>
