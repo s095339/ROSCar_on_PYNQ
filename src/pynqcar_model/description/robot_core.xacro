@@ -111,36 +111,9 @@
         mass="${wheel_mass}"
     />
 
-<!--
-    <joint name="left_front_wheel_joint" type="continuous">
-        <parent link="base_link"/>
-        <child link="left_front_wheel"/>
-        
-        
-        <origin xyz = "${chassis_size_x/4} ${chassis_size_y/2} 0" rpy="-${pi/2} 0 0"/> 
-        
-        <axis xyz="0 0 1"/>
-    </joint>
--->
-    <!-- LEFT FRONT WHEEL LINK -->
-<!--
-    <link name="left_front_wheel">
-        <visual>
-            <geometry>
-                <cylinder radius = "${wheel_radius}" length = "${wheel_length}"/>
-            </geometry>
-            <material name="black"/>
-        </visual>
-        <collision>
-            <geometry>
-                <cylinder radius = "${wheel_radius}" length = "${wheel_length}"/>
-            </geometry>
-        </collision>
-        <xacro:inertial_cylinder mass="0.1" radius = "${wheel_radius}" length = "${wheel_length}">
-            <origin xyz="0 0 0" rpy = "0 0 0" />
-        </xacro:inertial_cylinder>
-    </link>
--->
+
+    
+
     <gazebo reference="left_front_wheel_link">
         <material>
             Gazebo/Black
@@ -160,31 +133,7 @@
         mass="${wheel_mass}"
     />
     
-<!--
-    <joint name="left_back_wheel_joint" type="continuous">
-        <parent link="base_link"/>
-        <child link="left_back_wheel"/>
-        <origin xyz = "-${chassis_size_x/4} ${chassis_size_y/2} 0" rpy="-${pi/2} 0 0"/> 
-        <axis xyz="0 0 1"/>
-    </joint>
 
-    <link name="left_back_wheel">
-        <visual>
-            <geometry>
-                <cylinder radius = "${wheel_radius}" length = "${wheel_length}"/>
-            </geometry>
-            <material name="black"/>
-        </visual>
-        <collision>
-            <geometry>
-                <cylinder radius = "${wheel_radius}" length = "${wheel_length}"/>
-            </geometry>
-        </collision>
-        <xacro:inertial_cylinder mass="0.1" radius = "${wheel_radius}" length = "${wheel_length}">
-            <origin xyz="0 0 0" rpy = "0 0 0" />
-        </xacro:inertial_cylinder>
-    </link>
--->
     <gazebo reference="left_back_wheel_link">
         <material>
             Gazebo/Black
@@ -201,31 +150,7 @@
         pos_z="0" 
         mass="${wheel_mass}"
     />
-<!--
-    <joint name="right_front_wheel_joint" type="continuous">
-        <parent link="base_link"/>
-        <child link="right_front_wheel"/>
-        <origin xyz = "${chassis_size_x/4} -${chassis_size_y/2} 0" rpy="${pi/2} 0 0"/> 
-        <axis xyz="0 0 -1"/>
-    </joint>
 
-    <link name="right_front_wheel">
-        <visual>
-            <geometry>
-                <cylinder radius = "${wheel_radius}" length = "${wheel_length}"/>
-            </geometry>
-            <material name="black"/>
-        </visual>
-        <collision>
-            <geometry>
-                <cylinder radius = "${wheel_radius}" length = "${wheel_length}"/>
-            </geometry>
-        </collision>
-        <xacro:inertial_cylinder mass="0.1" radius = "${wheel_radius}" length = "${wheel_length}">
-            <origin xyz="0 0 0" rpy = "0 0 0" />
-        </xacro:inertial_cylinder>
-    </link>
--->
     <gazebo reference="right_front_wheel_link">
         <material>
             Gazebo/Black
@@ -243,31 +168,7 @@
         pos_z="0" 
         mass="${wheel_mass}"
     />
-<!--
-    <joint name="right_back_wheel_joint" type="continuous">
-        <parent link="base_link"/>
-        <child link="right_back_wheel"/>
-        <origin xyz = "-${chassis_size_x/4} -${chassis_size_y/2} 0" rpy="${pi/2} 0 0"/> 
-        <axis xyz="0 0 -1"/>
-    </joint>
 
-    <link name="right_back_wheel">
-        <visual>
-            <geometry>
-                <cylinder radius = "${wheel_radius}" length = "${wheel_length}"/>
-            </geometry>
-            <material name="black"/>
-        </visual>
-        <collision>
-            <geometry>
-                <cylinder radius = "${wheel_radius}" length = "${wheel_length}"/>
-            </geometry>
-        </collision>
-        <xacro:inertial_cylinder mass="0.1" radius = "${wheel_radius}" length = "${wheel_length}">
-            <origin xyz="0 0 0" rpy = "0 0 0" />
-        </xacro:inertial_cylinder>
-    </link>
--->
     <gazebo reference="right_back_wheel_link">
         <material>
             Gazebo/Black
@@ -309,7 +210,7 @@
     <!--lidar-->
 
     <xacro:lidar
-    joint_xyz = "-0.1 0 ${chassis_size_z + 0.02}" 
+    joint_xyz = "-0.1 0 ${chassis_size_z + 0.1}" 
     joint_rpy = "0 0 0"
     radius = "0.05"
     length = "0.04"
