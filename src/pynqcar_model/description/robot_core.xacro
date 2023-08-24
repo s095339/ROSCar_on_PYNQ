@@ -2,6 +2,7 @@
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" >
 
     <xacro:include filename="inertial_macros.xacro"/>
+    <xacro:include filename ="mech/mecanum_wheel.urdf.xacro"/>
 
 
     <!-- Color setting-->
@@ -92,24 +93,33 @@
     -->
     <xacro:property name="wheel_radius" value="0.05"/>
     <xacro:property name="wheel_length" value="0.04"/>
+    <xacro:property name="wheel_mass" value="0.6"/>
     <!--======================================================================= -->
 
     <!-- LEFT FRONT WHEEL LINK -->
+    <xacro:mecanum_wheel 
+        side="left_front"
+        radius="${wheel_radius}" 
+        width="${wheel_length}" 
+        pos_x="${chassis_size_x/4}" 
+        pos_y="${chassis_size_y/2}" 
+        pos_z="0" 
+        mass="${wheel_mass}"
+    />
+
+<!--
     <joint name="left_front_wheel_joint" type="continuous">
         <parent link="base_link"/>
         <child link="left_front_wheel"/>
-        <!--
-            cylinder is by defualt are oriented along the z-axis
-            we need out wheel to be oriented along the y-axis(base_link)
-        -->
-        <!-- 輪子約在車身1/4處-->
+        
+        
         <origin xyz = "${chassis_size_x/4} ${chassis_size_y/2} 0" rpy="-${pi/2} 0 0"/> 
-        <!--axis of rotation-->
-        <!--rotate around z axis of wheel, anti-clockwise=>positive (right hand rule) -->
+        
         <axis xyz="0 0 1"/>
     </joint>
-
+-->
     <!-- LEFT FRONT WHEEL LINK -->
+<!--
     <link name="left_front_wheel">
         <visual>
             <geometry>
@@ -126,29 +136,34 @@
             <origin xyz="0 0 0" rpy = "0 0 0" />
         </xacro:inertial_cylinder>
     </link>
-    <gazebo reference="left_front_wheel">
+-->
+    <gazebo reference="left_front_wheel_link">
         <material>
             Gazebo/Black
         </material>
     </gazebo>
 
 
+
     <!-- LEFT BACK WHEEL LINK -->
+    <xacro:mecanum_wheel 
+        side="left_back"
+        radius="${wheel_radius}" 
+        width="${wheel_length}" 
+        pos_x="-${chassis_size_x/4}" 
+        pos_y="${chassis_size_y/2}" 
+        pos_z="0" 
+        mass="${wheel_mass}"
+    />
+    
+<!--
     <joint name="left_back_wheel_joint" type="continuous">
         <parent link="base_link"/>
         <child link="left_back_wheel"/>
-        <!--
-            cylinder is by defualt are oriented along the z-axis
-            we need out wheel to be oriented along the y-axis(base_link)
-        -->
-        <!-- 輪子約在車身3/4處 車身左側-->
         <origin xyz = "-${chassis_size_x/4} ${chassis_size_y/2} 0" rpy="-${pi/2} 0 0"/> 
-        <!--axis of rotation-->
-        <!--rotate around z axis of wheel, anti-clockwise=>positive (right hand rule) -->
         <axis xyz="0 0 1"/>
     </joint>
 
-    <!-- LEFT BACK WHEEL LINK -->
     <link name="left_back_wheel">
         <visual>
             <geometry>
@@ -165,31 +180,31 @@
             <origin xyz="0 0 0" rpy = "0 0 0" />
         </xacro:inertial_cylinder>
     </link>
-
-    <gazebo reference="left_back_wheel">
+-->
+    <gazebo reference="left_back_wheel_link">
         <material>
             Gazebo/Black
         </material>
     </gazebo>
 
-
-
     <!-- RIGHT FRONT WHEEL LINK -->
+    <xacro:mecanum_wheel 
+        side="right_front"
+        radius="${wheel_radius}" 
+        width="${wheel_length}" 
+        pos_x="${chassis_size_x/4}" 
+        pos_y="-${chassis_size_y/2}" 
+        pos_z="0" 
+        mass="${wheel_mass}"
+    />
+<!--
     <joint name="right_front_wheel_joint" type="continuous">
         <parent link="base_link"/>
         <child link="right_front_wheel"/>
-        <!--
-            cylinder is by defualt are oriented along the z-axis
-            we need out wheel to be oriented along the y-axis(base_link)
-        -->
-        <!-- 輪子約在車身1/4處 右側-->
         <origin xyz = "${chassis_size_x/4} -${chassis_size_y/2} 0" rpy="${pi/2} 0 0"/> 
-        <!--axis of rotation-->
-        <!--rotate around z axis of wheel, anti-clockwise=>positive (right hand rule) -->
         <axis xyz="0 0 -1"/>
     </joint>
 
-    <!-- RIGH FRONT WHEEL LINK -->
     <link name="right_front_wheel">
         <visual>
             <geometry>
@@ -206,8 +221,8 @@
             <origin xyz="0 0 0" rpy = "0 0 0" />
         </xacro:inertial_cylinder>
     </link>
-
-    <gazebo reference="right_front_wheel">
+-->
+    <gazebo reference="right_front_wheel_link">
         <material>
             Gazebo/Black
         </material>
@@ -215,21 +230,23 @@
 
 
     <!-- RIGHT BACK WHEEL LINK -->
+    <xacro:mecanum_wheel 
+        side="right_back"
+        radius="${wheel_radius}" 
+        width="${wheel_length}" 
+        pos_x="-${chassis_size_x/4}" 
+        pos_y="-${chassis_size_y/2}" 
+        pos_z="0" 
+        mass="${wheel_mass}"
+    />
+<!--
     <joint name="right_back_wheel_joint" type="continuous">
         <parent link="base_link"/>
         <child link="right_back_wheel"/>
-        <!--
-            cylinder is by defualt are oriented along the z-axis
-            we need out wheel to be oriented along the y-axis(base_link)
-        -->
-        <!-- 輪子約在車身3/4處 車身右側-->
         <origin xyz = "-${chassis_size_x/4} -${chassis_size_y/2} 0" rpy="${pi/2} 0 0"/> 
-        <!--axis of rotation-->
-        <!--rotate around z axis of wheel, anti-clockwise=>positive (right hand rule) -->
         <axis xyz="0 0 -1"/>
     </joint>
 
-    <!-- RIGHT FRONT WHEEL LINK -->
     <link name="right_back_wheel">
         <visual>
             <geometry>
@@ -246,8 +263,8 @@
             <origin xyz="0 0 0" rpy = "0 0 0" />
         </xacro:inertial_cylinder>
     </link>
-
-    <gazebo reference="right_back_wheel">
+-->
+    <gazebo reference="right_back_wheel_link">
         <material>
             Gazebo/Black
         </material>
