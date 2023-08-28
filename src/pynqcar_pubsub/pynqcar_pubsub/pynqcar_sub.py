@@ -57,14 +57,14 @@ import numpy as np
 # Car spec, assume car goes in x direction
 lx = 0.075 # meters
 ly = 0.0975 # meters
-r = 0.0275 # meters
+r = 0.03025477707 # meters
 
 class PIDspeedControl(Node):
     def __init__(self,overlay, PID = True):
         super().__init__('PIDspeedControl')
 
-        self.Kp = 28.0
-        self.Ki = 5.5
+        self.Kp = 85.0
+        self.Ki = 7.0
         self.Kd = 0.0
         self.PID = PID
         self.get_logger().info('Publish /speed(Float64MultiArray) with format [V1, V2, V3, V4, t1, t2, t3, t4], V = measured speed, t = target speed')
@@ -82,7 +82,7 @@ class PIDspeedControl(Node):
         car.run("stop")
 
         # create publisher
-        timer_period = 0.04  # seconds
+        timer_period = 0.01  # seconds
         self.timer = self.create_timer(timer_period, self.timer_callback)
         self.publisher_ = self.create_publisher(Float64MultiArray, 'speed', 10)
         
@@ -136,6 +136,10 @@ class PIDspeedControl(Node):
         V2 = (M2 - self.pre_M2) / dt / 4323.3 * 2 * math.pi # [rad / s]
         V3 = (M3 - self.pre_M3) / dt / 4317.3 * 2 * math.pi # [rad / s]
         V4 = (M4 - self.pre_M4) / dt / 4310.0 * 2 * math.pi # [rad / s]
+
+        # remove large value, TO DO: fix encoder frequency in FPGA
+        if abs(V1) > 4.5 or abs(V2) > 4.5 or abs(V3) > 4.5 or abs(V4) > 4.5:
+            return
 
         # measure
         self.av1 = 0.5 * V1 + 0.5 * self.av1
