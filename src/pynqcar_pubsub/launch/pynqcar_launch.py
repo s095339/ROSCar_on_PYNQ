@@ -21,14 +21,13 @@ def generate_launch_description():
         Node(
             package='pynqcar_pubsub',
             executable='Car',
-            name='Car',
-            #remappings=[
-            #    ('/', '/turtlesim1/turtle1/pose'),
-            #]
-        ),
+            name='Car'
+        )
+        """
         Node(
             package='pynqcar_pubsub',
             executable='Imu',
             name='Imu'
         )
+        """
     ])

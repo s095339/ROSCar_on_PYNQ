@@ -262,7 +262,7 @@ class IMUPublisher(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    ov_pth = os.path.join(workspace, 'hardware', 'uart.bit')
+    ov_pth = os.path.join(workspace, 'hardware', 'pynqCar.bit')
     overlay = Overlay(ov_pth,download = False)
     OurImu = Serial_IMU(overlay = overlay, direction = 0)
     IMU_publisher = IMUPublisher(device = OurImu)
