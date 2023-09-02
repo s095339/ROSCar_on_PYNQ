@@ -53,7 +53,7 @@ class WheelOdom(Node):
         odom.child_frame_id = "base_link"
         odom.pose.pose.position.x = self.x
         odom.pose.pose.position.y = self.y
-        odom.pose.pose.orientation = self.quaternion_from_euler(roll = self.th)
+        odom.pose.pose.orientation = self.quaternion_from_euler(yaw = self.th)
         odom.twist.twist.linear.x = vx
         odom.twist.twist.linear.y = vy
         odom.twist.twist.angular.z = wz
@@ -62,7 +62,7 @@ class WheelOdom(Node):
         t.child_frame_id = "base_link"
         t.transform.translation.x = self.x
         t.transform.translation.y = self.y
-        t.transform.rotation = self.quaternion_from_euler(roll = self.th)
+        t.transform.rotation = self.quaternion_from_euler(yaw= self.th)
         self.tf_broadcaster.sendTransform(t)
         self.publisher_.publish(odom)
         self.previous_time = current_time
@@ -82,10 +82,10 @@ class WheelOdom(Node):
 
         q = [0] * 4
         q = Quaternion()
-        q.x = cy * cp * cr + sy * sp * sr
-        q.y = cy * cp * sr - sy * sp * cr
-        q.z = sy * cp * sr + cy * sp * cr
-        q.w = sy * cp * cr - cy * sp * sr
+        q.w = cy * cp * cr + sy * sp * sr
+        q.x = cy * cp * sr - sy * sp * cr
+        q.y = sy * cp * sr + cy * sp * cr
+        q.z = sy * cp * cr - cy * sp * sr
 
         return q
 

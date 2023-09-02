@@ -18,13 +18,13 @@ import math
 import asyncio 
 import numpy as np
 
-from std_msgs.msg import String
+from std_msgs.msg import String, Float32MultiArray
 from geometry_msgs.msg import Twist
 from std_msgs.msg import Float64MultiArray
 from geometry_msgs.msg import Quaternion
 from sensor_msgs.msg import Imu
 
-from sensor_msgs.msg import Imu
+import time
 
 # add python path
 import os
@@ -68,9 +68,10 @@ class IMUPublisher(Node):
         #    10)
         #publisher
         self.publisher_ = self.create_publisher(Imu, 'imu/data_raw', qos_profile)
-        #self.timer_period = 0.1  # seconds
-        #self.timer = self.create_timer(self.timer_period, self.timer_callback)
-
+        #timer 再試試看!!!==================
+        self.timer_period = 0.1  # seconds
+        self.timer = self.create_timer(self.timer_period, self.timer_callback)
+        #====================================
 
         self.i = 0
         self.previous_time = self.get_clock().now()
@@ -81,12 +82,9 @@ class IMUPublisher(Node):
         self.cnt = 0
         self.sign = 0
         self.receivedData = {}
-        #asyncio handle interrupt
-        self.imu_pub()
-        #loop = asyncio.get_event_loop() 
-        #tasks = [asyncio.ensure_future(self.uart_interrupt())]
-        #self.Imu_dev.setupCtrlReg()
-        #loop.run_until_complete(asyncio.wait(tasks))
+        
+        #self.imu_pub()
+        
     def DEG2RAD(self, degree):
         return degree *  math.pi/180.
     def quaternion_from_euler(self, roll = 0.0, pitch = 0.0, yaw = 0.0):
@@ -110,8 +108,72 @@ class IMUPublisher(Node):
         return q
     
     #async def uart_interrupt(self):
+    def timer_callback(self):
+       
+        YPR = [0,0,0] 
+        gyro=[0,0,0] #角速度
+        ACC=[0,0,0] #加速度
+        
+        Re_buf,sign = self.Imu_dev.read_Imu(23)
+
+       
+        if(Re_buf[0]==0x5A and Re_buf[1]==0x5A):       #检查帧头，帧尾
+            #print("yoyoyoy")
+            ACC[0]=int(np.int32(Re_buf[4]<<8|Re_buf[5])/self.Imu_dev.G)  #合成数据，去掉小数点后2位
+            ACC[1]=int(np.int32(Re_buf[6]<<8|Re_buf[7])/self.Imu_dev.G)
+            ACC[2]=int(np.int32(Re_buf[8]<<8|Re_buf[9])/self.Imu_dev.G)
+            gyro[0]=int(np.int32(Re_buf[10]<<8|Re_buf[11])/self.Imu_dev.deg_sec)  #合成数据，去掉小数点后2位
+            gyro[1]=int(np.int32(Re_buf[12]<<8|Re_buf[13])/self.Imu_dev.deg_sec)
+            gyro[2]=int(np.int32(Re_buf[14]<<8|Re_buf[15])/self.Imu_dev.deg_sec)
+            YPR[0]=int(np.int16(Re_buf[16]<<8|Re_buf[17])/100)#roll  #合成数据，去掉小数点后2位
+            YPR[1]=int(np.int16(Re_buf[18]<<8|Re_buf[19])/100)#pitch
+            YPR[2]=int(np.int16(Re_buf[20]<<8|Re_buf[21])/100)#yaw
+            
+            #print("frame head = ",Re_buf[0] )
+            self.receivedData["ACC"] = [ACC[0],ACC[1],ACC[2]]
+            self.receivedData["gyro"] = [gyro[0],gyro[1],gyro[2]]
+            self.receivedData["YPR"] = [YPR[2],YPR[1],YPR[0]]
+            self.get_logger().info(str(self.receivedData["ACC"]) ) 
+            self.get_logger().info(str(self.receivedData["YPR"]) ) 
+            #send topic=
+            imu_data = Imu()
+            current_time = self.get_clock().now()
+            q = self.quaternion_from_euler(
+                self.DEG2RAD(self.receivedData["YPR"][0]),
+                self.DEG2RAD(self.receivedData["YPR"][1]),
+                self.DEG2RAD(self.receivedData["YPR"][2])
+                )
+            imu_data.header.stamp = current_time.to_msg()
+            imu_data.header.frame_id = 'imu'
+            
+            #self.get_logger().debug("Quaternion orientation:")
+            #self.get_logger().info('x:%f ,y:%f ,z:%f ,w:%f' % (q.x,q.y,q.z,q.w))
+            
+            imu_data.orientation.x = q.x
+            imu_data.orientation.y = q.y
+            imu_data.orientation.z = q.z
+            imu_data.orientation.w = q.w
+            # angular_velocity
+            imu_data.angular_velocity.x = self.DEG2RAD(self.receivedData["gyro"][0])
+            imu_data.angular_velocity.y = self.DEG2RAD(self.receivedData["gyro"][1])
+            imu_data.angular_velocity.z = self.DEG2RAD(self.receivedData["gyro"][2])
+            
+            # linear_acceleration
+            imu_data.linear_acceleration.x = self.receivedData["ACC"][0]* 9.8
+            imu_data.linear_acceleration.y = self.receivedData["ACC"][1]* 9.8
+            imu_data.linear_acceleration.z = self.receivedData["ACC"][2]* 9.8
+            self.previous_time = current_time
+            self.publisher_.publish(imu_data)
+            
+        #print("interrupt occured!")
+        #node.interupt_publisher_.publish(msg)
+            #else:
+            #    print("")
+            
+            #Re_buf = [0x00 for i in range(30)]
+
     def imu_pub(self):
-        serial_interrupt = Interrupt('axi_uartlite_0/interrupt')
+        #serial_interrupt = Interrupt('axi_uartlite_0/interrupt')
         #node = Node("interrupt_pub")
         #node.interupt_publisher_ = node.create_publisher(String, "Serial_interrupt",10)
         #msg = String()
@@ -129,7 +191,7 @@ class IMUPublisher(Node):
                 continue
             else:
                 #while self.Imu_dev.uart_dev_available():
-
+            
                 self.Re_buf[self.cnt] = self.Imu_dev.read(1)[0]
                 if self.cnt==0 and self.Re_buf[0]!=0x5A:
                     continue
@@ -192,15 +254,22 @@ class IMUPublisher(Node):
                     self.Re_buf = [0x00 for i in range(30)]
         #print("interrupt occured!")
         #node.interupt_publisher_.publish(msg)
+            #else:
+            #    print("")
+            
+            #Re_buf = [0x00 for i in range(30)]
 
 
 def main(args=None):
     rclpy.init(args=args)
-    ov_pth = os.path.join(workspace, 'hardware', 'uart.bit')
+    ov_pth = os.path.join(workspace, 'hardware', 'pynqCar.bit')
     overlay = Overlay(ov_pth,download = False)
     OurImu = Serial_IMU(overlay = overlay, direction = 0)
     IMU_publisher = IMUPublisher(device = OurImu)
     rclpy.spin(IMU_publisher)
+    
+    IMU_publisher.destroy_node()
+    rclpy.shutdown()
 
 if __name__ == '__main__':
     main()

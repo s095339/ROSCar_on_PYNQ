@@ -214,7 +214,7 @@ class PIDspeedControl(Node):
       
 def main(args=None):
     rclpy.init(args=args)
-    ov_pth = os.path.join(workspace, 'hardware', 'uart.bit')
+    ov_pth = os.path.join(workspace, 'hardware', 'pynqCar.bit')
     overlay = Overlay(ov_pth)
     # For DC Motor setup(I2c interface) 
     i2c_dev = I2C_Master(overlay)
